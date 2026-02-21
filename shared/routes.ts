@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { insertIdeaSchema, type Idea } from "./schema";
+import { insertIdeaSchema, insertCommentSchema, type Idea, type Comment } from "./schema";
 
 export const errorSchemas = {
   validation: z.object({
@@ -56,6 +56,24 @@ export const api = {
       responses: {
         204: z.void(),
         404: errorSchemas.notFound,
+      },
+    },
+    comments: {
+      list: {
+        method: 'GET' as const,
+        path: '/api/ideas/:id/comments/:section' as const,
+        responses: {
+          200: z.array(z.custom<Comment>()),
+        },
+      },
+      create: {
+        method: 'POST' as const,
+        path: '/api/ideas/:id/comments' as const,
+        input: insertCommentSchema,
+        responses: {
+          201: z.custom<Comment>(),
+          400: errorSchemas.validation,
+        },
       },
     },
   },

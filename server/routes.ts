@@ -65,6 +65,27 @@ export async function registerRoutes(
     }
   });
 
+  app.get(api.ideas.comments.list.path, async (req, res) => {
+    const comments = await storage.getComments(Number(req.params.id), req.params.section);
+    res.json(comments);
+  });
+
+  app.post(api.ideas.comments.create.path, async (req, res) => {
+    try {
+      const input = api.ideas.comments.create.input.parse(req.body);
+      const comment = await storage.createComment(input);
+      res.status(201).json(comment);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
   // Seed data
   try {
     const existingIdeas = await storage.getIdeas();

@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Edit2, Trash2, Calendar, CheckCircle2, Target, Users, Palette, Layers } from "lucide-react";
 import { CreateIdeaDialog } from "@/components/CreateIdeaDialog";
+import { CommentSection } from "@/components/CommentSection";
 import { useState } from "react";
 import { format } from "date-fns";
 import {
@@ -98,6 +99,10 @@ export default function IdeaDetail() {
           <h1 className="font-display text-4xl md:text-5xl font-bold leading-tight mb-6">
             {idea.what}
           </h1>
+          <div className="mt-6 p-6 rounded-2xl bg-secondary/10 border border-border/30">
+            <h3 className="font-display text-lg font-semibold mb-2">Overall Discussion</h3>
+            <CommentSection ideaId={idea.id} section="what" />
+          </div>
         </motion.div>
 
         {/* Content Grid */}
@@ -120,6 +125,7 @@ export default function IdeaDetail() {
                   </div>
                   <div className="bg-secondary/30 p-6 rounded-2xl border border-border/50">
                     <p className="text-lg leading-relaxed">{idea.who}</p>
+                    <CommentSection ideaId={idea.id} section="who" />
                   </div>
                 </section>
 
@@ -132,6 +138,7 @@ export default function IdeaDetail() {
                     <div className="prose prose-stone max-w-none text-foreground/90 whitespace-pre-wrap">
                       {idea.features}
                     </div>
+                    <CommentSection ideaId={idea.id} section="features" />
                   </div>
                 </section>
 
@@ -142,6 +149,7 @@ export default function IdeaDetail() {
                   </div>
                   <div className="bg-green-50/50 dark:bg-green-950/10 p-6 rounded-2xl border border-green-100 dark:border-green-900/30">
                     <p className="text-lg leading-relaxed">{idea.doneCriteria}</p>
+                    <CommentSection ideaId={idea.id} section="doneCriteria" />
                   </div>
                 </section>
 
@@ -168,6 +176,9 @@ export default function IdeaDetail() {
                   <p className="text-primary-foreground/90 leading-relaxed font-medium">
                     {idea.inspiration}
                   </p>
+                  <div className="mt-4 pt-4 border-t border-white/20">
+                    <CommentSection ideaId={idea.id} section="inspiration" />
+                  </div>
                 </CardContent>
               </Card>
 
