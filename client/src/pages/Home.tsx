@@ -1,8 +1,9 @@
 import { useIdeas } from "@/hooks/use-ideas";
 import { IdeaCard } from "@/components/IdeaCard";
+import { IdeaTable } from "@/components/IdeaTable";
 import { CreateIdeaDialog } from "@/components/CreateIdeaDialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Lightbulb } from "lucide-react";
+import { Plus, Lightbulb, LayoutGrid, List } from "lucide-react";
 import { useState } from "react";
 import { type Idea } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +12,7 @@ export default function Home() {
   const { data: ideas, isLoading, error } = useIdeas();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIdea, setEditingIdea] = useState<Idea | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "table">("table");
 
   const handleCreate = () => {
     setEditingIdea(null);
@@ -78,7 +80,26 @@ export default function Home() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
+            className="flex items-center gap-3"
           >
+            <div className="flex items-center bg-secondary/30 p-1 rounded-lg border border-border/50">
+              <Button
+                variant={viewMode === "grid" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setViewMode("grid")}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "table" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setViewMode("table")}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
             <Button 
               size="lg" 
               onClick={handleCreate}
@@ -108,7 +129,7 @@ export default function Home() {
                 Create First Idea
               </Button>
             </motion.div>
-          ) : (
+          ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
               <AnimatePresence mode="popLayout">
                 {ideas.map((idea) => (
@@ -128,6 +149,14 @@ export default function Home() {
                 ))}
               </AnimatePresence>
             </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <IdeaTable ideas={ideas} onEdit={handleEdit} />
+            </motion.div>
           )}
         </main>
       </div>
