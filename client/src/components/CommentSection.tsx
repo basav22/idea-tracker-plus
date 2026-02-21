@@ -71,10 +71,12 @@ export function CommentSection({ ideaId, section }: CommentSectionProps) {
         ) : comments?.length === 0 ? (
           <p className="text-sm text-muted-foreground italic">No comments yet. Start the conversation!</p>
         ) : (
-          comments?.map((comment) => (
+          comments?.map((comment: any) => (
             <div key={comment.id} className="bg-secondary/10 p-3 rounded-xl border border-border/20">
               <p className="text-sm leading-relaxed">{comment.content}</p>
-              <div className="mt-2 text-[10px] text-muted-foreground font-medium">
+              <div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground font-medium">
+                {comment.username && <span className="text-foreground/70">{comment.username}</span>}
+                {comment.username && comment.createdAt && <span>·</span>}
                 {comment.createdAt && format(new Date(comment.createdAt), "MMM d, h:mm a")}
               </div>
             </div>

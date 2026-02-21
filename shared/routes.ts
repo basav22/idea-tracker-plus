@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { insertIdeaSchema, insertCommentSchema, type Idea, type Comment } from "./schema";
+import { insertIdeaSchema, insertCommentSchema, type Idea, type Comment, type User } from "./schema";
 
 export const errorSchemas = {
   validation: z.object({
@@ -14,7 +14,47 @@ export const errorSchemas = {
   }),
 };
 
+const authInputSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
 export const api = {
+  auth: {
+    register: {
+      method: 'POST' as const,
+      path: '/api/auth/register' as const,
+      input: authInputSchema,
+      responses: {
+        201: z.custom<Omit<User, 'password'>>(),
+        400: errorSchemas.validation,
+      },
+    },
+    login: {
+      method: 'POST' as const,
+      path: '/api/auth/login' as const,
+      input: authInputSchema,
+      responses: {
+        200: z.custom<Omit<User, 'password'>>(),
+        401: errorSchemas.validation,
+      },
+    },
+    logout: {
+      method: 'POST' as const,
+      path: '/api/auth/logout' as const,
+      responses: {
+        200: z.object({ message: z.string() }),
+      },
+    },
+    me: {
+      method: 'GET' as const,
+      path: '/api/auth/me' as const,
+      responses: {
+        200: z.custom<Omit<User, 'password'>>(),
+        401: errorSchemas.validation,
+      },
+    },
+  },
   ideas: {
     list: {
       method: 'GET' as const,

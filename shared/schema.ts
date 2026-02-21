@@ -1,6 +1,13 @@
-import { pgTable, text, serial, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").unique().notNull(),
+  password: text("password").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 export const ideas = pgTable("ideas", {
   id: serial("id").primaryKey(),
@@ -9,6 +16,7 @@ export const ideas = pgTable("ideas", {
   features: text("features").notNull(),
   doneCriteria: text("done_criteria").notNull(),
   inspiration: text("inspiration").notNull(),
+  userId: integer("user_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -17,12 +25,16 @@ export const comments = pgTable("comments", {
   ideaId: serial("idea_id").references(() => ideas.id),
   section: text("section").notNull(), // 'what', 'who', 'features', 'doneCriteria', 'inspiration'
   content: text("content").notNull(),
+  userId: integer("user_id").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertIdeaSchema = createInsertSchema(ideas).omit({ id: true, createdAt: true });
-export const insertCommentSchema = createInsertSchema(comments).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+export const insertIdeaSchema = createInsertSchema(ideas).omit({ id: true, createdAt: true, userId: true });
+export const insertCommentSchema = createInsertSchema(comments).omit({ id: true, createdAt: true, userId: true });
 
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Idea = typeof ideas.$inferSelect;
 export type InsertIdea = z.infer<typeof insertIdeaSchema>;
 export type Comment = typeof comments.$inferSelect;

@@ -1,13 +1,72 @@
 import type { Express } from "express";
 import type { Server } from "http";
+import passport from "passport";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
+import { requireAuth, hashPassword } from "./auth";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // ---- Auth routes ----
+  app.post(api.auth.register.path, async (req, res, next) => {
+    try {
+      const { username, password } = api.auth.register.input.parse(req.body);
+
+      const existing = await storage.getUserByUsername(username);
+      if (existing) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+
+      const hashed = await hashPassword(password);
+      const user = await storage.createUser(username, hashed);
+      const { password: _, ...userWithoutPassword } = user;
+
+      req.login(userWithoutPassword, (err) => {
+        if (err) return next(err);
+        res.status(201).json(userWithoutPassword);
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join("."),
+        });
+      }
+      next(err);
+    }
+  });
+
+  app.post(api.auth.login.path, (req, res, next) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) return next(err);
+      if (!user) {
+        return res.status(401).json({ message: info?.message || "Invalid credentials" });
+      }
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.json(user);
+      });
+    })(req, res, next);
+  });
+
+  app.post(api.auth.logout.path, (req, res, next) => {
+    req.logout((err) => {
+      if (err) return next(err);
+      res.json({ message: "Logged out" });
+    });
+  });
+
+  app.get(api.auth.me.path, (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    res.json(req.user);
+  });
+
+  // ---- Ideas routes ----
   app.get(api.ideas.list.path, async (req, res) => {
     const allIdeas = await storage.getIdeas();
     res.json(allIdeas);
@@ -21,10 +80,10 @@ export async function registerRoutes(
     res.json(idea);
   });
 
-  app.post(api.ideas.create.path, async (req, res) => {
+  app.post(api.ideas.create.path, requireAuth, async (req, res) => {
     try {
       const input = api.ideas.create.input.parse(req.body);
-      const idea = await storage.createIdea(input);
+      const idea = await storage.createIdea({ ...input, userId: req.user!.id });
       res.status(201).json(idea);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -37,7 +96,7 @@ export async function registerRoutes(
     }
   });
 
-  app.put(api.ideas.update.path, async (req, res) => {
+  app.put(api.ideas.update.path, requireAuth, async (req, res) => {
     try {
       const input = api.ideas.update.input.parse(req.body);
       const idea = await storage.updateIdea(Number(req.params.id), input);
@@ -56,7 +115,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete(api.ideas.delete.path, async (req, res) => {
+  app.delete(api.ideas.delete.path, requireAuth, async (req, res) => {
     try {
       await storage.deleteIdea(Number(req.params.id));
       res.status(204).end();
@@ -70,10 +129,10 @@ export async function registerRoutes(
     res.json(comments);
   });
 
-  app.post(api.ideas.comments.create.path, async (req, res) => {
+  app.post(api.ideas.comments.create.path, requireAuth, async (req, res) => {
     try {
       const input = api.ideas.comments.create.input.parse(req.body);
-      const comment = await storage.createComment(input);
+      const comment = await storage.createComment({ ...input, userId: req.user!.id });
       res.status(201).json(comment);
     } catch (err) {
       if (err instanceof z.ZodError) {

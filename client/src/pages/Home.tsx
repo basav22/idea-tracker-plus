@@ -3,16 +3,26 @@ import { IdeaCard } from "@/components/IdeaCard";
 import { IdeaTable } from "@/components/IdeaTable";
 import { CreateIdeaDialog } from "@/components/CreateIdeaDialog";
 import { Button } from "@/components/ui/button";
-import { Plus, Lightbulb, LayoutGrid, List } from "lucide-react";
+import { Plus, Lightbulb, LayoutGrid, List, LogOut } from "lucide-react";
 import { useState } from "react";
 import { type Idea } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser, useLogout } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 
 export default function Home() {
   const { data: ideas, isLoading, error } = useIdeas();
+  const { data: user } = useUser();
+  const logout = useLogout();
+  const [, navigate] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingIdea, setEditingIdea] = useState<Idea | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "table">("table");
+
+  const handleLogout = async () => {
+    await logout.mutateAsync();
+    navigate("/auth");
+  };
 
   const handleCreate = () => {
     setEditingIdea(null);
@@ -66,9 +76,24 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight text-primary">
-                Idea Tracker
-              </h1>
+              <div className="flex items-center gap-4 mb-2">
+                <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight text-primary">
+                  Idea Tracker
+                </h1>
+              </div>
+              <div className="flex items-center gap-3 mt-2">
+                {user && (
+                  <>
+                    <span className="text-sm text-muted-foreground">
+                      Signed in as <span className="font-medium text-foreground">{user.username}</span>
+                    </span>
+                    <Button variant="ghost" size="sm" onClick={handleLogout} disabled={logout.isPending}>
+                      <LogOut className="w-4 h-4 mr-1" />
+                      Logout
+                    </Button>
+                  </>
+                )}
+              </div>
               <p className="text-lg text-muted-foreground max-w-md mt-4 leading-relaxed">
                 A minimal space to capture, refine, and track your next big thing.
                 Defined by clarity, focused on execution.
