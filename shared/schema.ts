@@ -38,6 +38,12 @@ export const upvotes = pgTable("upvotes", {
   uniqueUpvote: uniqueIndex("unique_upvote").on(table.ideaId, table.userId),
 }));
 
+export const session = pgTable("session", {
+  sid: text("sid").primaryKey(),
+  sess: text("sess").notNull(),
+  expire: timestamp("expire", { precision: 6 }).notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertIdeaSchema = createInsertSchema(ideas).omit({ id: true, createdAt: true, userId: true });
 export const insertCommentSchema = createInsertSchema(comments).omit({ id: true, createdAt: true, userId: true });

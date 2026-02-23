@@ -20,7 +20,6 @@ export function setupAuth(app: Express) {
   const sessionMiddleware = session({
     store: new PgStore({
       pool,
-      createTableIfMissing: true,
     }),
     secret: process.env.SESSION_SECRET || "idea-tracker-secret-change-in-production",
     resave: false,

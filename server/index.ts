@@ -61,6 +61,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  app.set("trust proxy", 1);
   setupAuth(app);
   await registerRoutes(httpServer, app);
 
