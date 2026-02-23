@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit2, Trash2, ExternalLink } from "lucide-react";
-import { type Idea } from "@shared/schema";
+import { Edit2, Trash2, ExternalLink, ThumbsUp } from "lucide-react";
+import { type IdeaResponse } from "@shared/schema";
 import { Link } from "wouter";
 import { useState } from "react";
 import {
@@ -22,17 +22,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useDeleteIdea } from "@/hooks/use-ideas";
+import { useDeleteIdea, useUpvoteIdea, useRemoveUpvote } from "@/hooks/use-ideas";
+import { useUser } from "@/hooks/use-auth";
 
 interface IdeaTableProps {
-  ideas: Idea[];
-  onEdit: (idea: Idea) => void;
+  ideas: IdeaResponse[];
+  onEdit: (idea: IdeaResponse) => void;
 }
 
 export function IdeaTable({ ideas, onEdit }: IdeaTableProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [ideaToDelete, setIdeaToDelete] = useState<number | null>(null);
   const deleteMutation = useDeleteIdea();
+  const upvoteMutation = useUpvoteIdea();
+  const removeUpvoteMutation = useRemoveUpvote();
+  const { data: user } = useUser();
 
   const handleDelete = () => {
     if (ideaToDelete !== null) {
@@ -50,6 +54,7 @@ export function IdeaTable({ ideas, onEdit }: IdeaTableProps) {
             <TableHead className="w-[80px] font-semibold">ID</TableHead>
             <TableHead className="font-semibold">What</TableHead>
             <TableHead className="font-semibold">Who</TableHead>
+            <TableHead className="font-semibold w-[80px]">Votes</TableHead>
             <TableHead className="text-right font-semibold">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -68,6 +73,26 @@ export function IdeaTable({ ideas, onEdit }: IdeaTableProps) {
               </TableCell>
               <TableCell>
                 <p className="text-muted-foreground text-sm truncate max-w-[200px]">{idea.who}</p>
+              </TableCell>
+              <TableCell>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`h-8 px-2 gap-1.5 ${idea.hasUpvoted ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                  onClick={() => {
+                    if (!user) return;
+                    if (idea.hasUpvoted) {
+                      removeUpvoteMutation.mutate(idea.id);
+                    } else {
+                      upvoteMutation.mutate(idea.id);
+                    }
+                  }}
+                  disabled={!user}
+                  title={!user ? 'Login to upvote' : idea.hasUpvoted ? 'Remove upvote' : 'Upvote this idea'}
+                >
+                  <ThumbsUp className={`w-3.5 h-3.5 ${idea.hasUpvoted ? 'fill-current' : ''}`} />
+                  <span className="text-xs font-medium">{idea.upvoteCount}</span>
+                </Button>
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex items-center justify-end gap-1">

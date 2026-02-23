@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -29,6 +29,15 @@ export const comments = pgTable("comments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const upvotes = pgTable("upvotes", {
+  id: serial("id").primaryKey(),
+  ideaId: integer("idea_id").references(() => ideas.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  uniqueUpvote: uniqueIndex("unique_upvote").on(table.ideaId, table.userId),
+}));
+
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertIdeaSchema = createInsertSchema(ideas).omit({ id: true, createdAt: true, userId: true });
 export const insertCommentSchema = createInsertSchema(comments).omit({ id: true, createdAt: true, userId: true });
@@ -45,7 +54,9 @@ export type CreateIdeaRequest = InsertIdea;
 export type UpdateIdeaRequest = Partial<InsertIdea>;
 export type CreateCommentRequest = InsertComment;
 
+export type Upvote = typeof upvotes.$inferSelect;
+
 // Response types
-export type IdeaResponse = Idea;
-export type IdeasListResponse = Idea[];
+export type IdeaResponse = Idea & { upvoteCount: number; hasUpvoted: boolean };
+export type IdeasListResponse = IdeaResponse[];
 export type CommentResponse = Comment;

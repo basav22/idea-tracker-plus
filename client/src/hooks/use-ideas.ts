@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl, type IdeaInput, type IdeaUpdateInput } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
+import type { IdeaResponse } from "@shared/schema";
 
 // GET /api/ideas
 export function useIdeas() {
@@ -89,6 +90,7 @@ export function useUpdateIdea() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [api.ideas.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.ideas.get.path] });
       toast({
         title: "Success",
         description: "Idea updated successfully",
@@ -113,7 +115,7 @@ export function useDeleteIdea() {
     mutationFn: async (id: number) => {
       const url = buildUrl(api.ideas.delete.path, { id });
       const res = await fetch(url, { method: "DELETE" });
-      
+
       if (!res.ok) {
         if (res.status === 404) throw new Error("Idea not found");
         throw new Error("Failed to delete idea");
@@ -132,6 +134,48 @@ export function useDeleteIdea() {
         description: error.message,
         variant: "destructive",
       });
+    },
+  });
+}
+
+// POST /api/ideas/:id/upvote
+export function useUpvoteIdea() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.ideas.upvote.path, { id });
+      const res = await fetch(url, { method: "POST" });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to upvote");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.ideas.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.ideas.get.path] });
+    },
+  });
+}
+
+// DELETE /api/ideas/:id/upvote
+export function useRemoveUpvote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const url = buildUrl(api.ideas.removeUpvote.path, { id });
+      const res = await fetch(url, { method: "DELETE" });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to remove upvote");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.ideas.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.ideas.get.path] });
     },
   });
 }

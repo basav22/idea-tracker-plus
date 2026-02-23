@@ -1,9 +1,10 @@
-import { type Idea } from "@shared/schema";
+import { type IdeaResponse } from "@shared/schema";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit2, Trash2, ArrowRight } from "lucide-react";
-import { useDeleteIdea } from "@/hooks/use-ideas";
+import { Edit2, Trash2, ArrowRight, ThumbsUp } from "lucide-react";
+import { useDeleteIdea, useUpvoteIdea, useRemoveUpvote } from "@/hooks/use-ideas";
+import { useUser } from "@/hooks/use-auth";
 import { useState } from "react";
 import {
   AlertDialog,
@@ -19,13 +20,25 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 
 interface IdeaCardProps {
-  idea: Idea;
-  onEdit: (idea: Idea) => void;
+  idea: IdeaResponse;
+  onEdit: (idea: IdeaResponse) => void;
 }
 
 export function IdeaCard({ idea, onEdit }: IdeaCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const deleteMutation = useDeleteIdea();
+  const upvoteMutation = useUpvoteIdea();
+  const removeUpvoteMutation = useRemoveUpvote();
+  const { data: user } = useUser();
+
+  const handleUpvoteToggle = () => {
+    if (!user) return;
+    if (idea.hasUpvoted) {
+      removeUpvoteMutation.mutate(idea.id);
+    } else {
+      upvoteMutation.mutate(idea.id);
+    }
+  };
 
   const handleDelete = () => {
     deleteMutation.mutate(idea.id);
@@ -62,18 +75,31 @@ export function IdeaCard({ idea, onEdit }: IdeaCardProps) {
           </CardContent>
 
           <CardFooter className="pt-0 flex items-center justify-between gap-2 border-t border-border/30 p-4 bg-secondary/20">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-primary pl-0 hover:bg-transparent transition-colors group/btn"
-              asChild
-            >
-              <Link href={`/ideas/${idea.id}`}>
-                View Details 
-                <ArrowRight className="w-3 h-3 ml-1 group-hover/btn:translate-x-0.5 transition-transform" />
-              </Link>
-            </Button>
-            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-primary pl-0 hover:bg-transparent transition-colors group/btn"
+                asChild
+              >
+                <Link href={`/ideas/${idea.id}`}>
+                  View Details
+                  <ArrowRight className="w-3 h-3 ml-1 group-hover/btn:translate-x-0.5 transition-transform" />
+                </Link>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-8 px-2 gap-1.5 ${idea.hasUpvoted ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}
+                onClick={handleUpvoteToggle}
+                disabled={!user}
+                title={!user ? 'Login to upvote' : idea.hasUpvoted ? 'Remove upvote' : 'Upvote this idea'}
+              >
+                <ThumbsUp className={`w-3.5 h-3.5 ${idea.hasUpvoted ? 'fill-current' : ''}`} />
+                <span className="text-xs font-medium">{idea.upvoteCount}</span>
+              </Button>
+            </div>
+
             <div className="flex gap-1">
               <Button
                 variant="ghost"

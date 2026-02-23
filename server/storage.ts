@@ -3,6 +3,7 @@ import {
   ideas,
   comments,
   users,
+  upvotes,
   type CreateIdeaRequest,
   type UpdateIdeaRequest,
   type IdeaResponse,
@@ -10,11 +11,11 @@ import {
   type CreateCommentRequest,
   type User,
 } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql, count } from "drizzle-orm";
 
 export interface IStorage {
-  getIdeas(): Promise<IdeaResponse[]>;
-  getIdea(id: number): Promise<IdeaResponse | undefined>;
+  getIdeas(currentUserId?: number): Promise<IdeaResponse[]>;
+  getIdea(id: number, currentUserId?: number): Promise<IdeaResponse | undefined>;
   createIdea(idea: CreateIdeaRequest & { userId?: number | null }): Promise<IdeaResponse>;
   updateIdea(id: number, updates: UpdateIdeaRequest): Promise<IdeaResponse>;
   deleteIdea(id: number): Promise<void>;
@@ -22,24 +23,39 @@ export interface IStorage {
   getComments(ideaId: number, section: string): Promise<CommentResponse[]>;
   createComment(comment: CreateCommentRequest & { userId?: number | null }): Promise<CommentResponse>;
 
+  addUpvote(ideaId: number, userId: number): Promise<void>;
+  removeUpvote(ideaId: number, userId: number): Promise<void>;
+  getUpvoteCount(ideaId: number): Promise<number>;
+  hasUserUpvoted(ideaId: number, userId: number): Promise<boolean>;
+
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserById(id: number): Promise<User | undefined>;
   createUser(username: string, hashedPassword: string): Promise<User>;
 }
 
 export class DatabaseStorage implements IStorage {
-  async getIdeas(): Promise<IdeaResponse[]> {
-    return await db.select().from(ideas);
+  async getIdeas(currentUserId?: number): Promise<IdeaResponse[]> {
+    const rows = await db.select().from(ideas);
+    const result: IdeaResponse[] = [];
+    for (const row of rows) {
+      const upvoteCount = await this.getUpvoteCount(row.id);
+      const hasUpvoted = currentUserId ? await this.hasUserUpvoted(row.id, currentUserId) : false;
+      result.push({ ...row, upvoteCount, hasUpvoted });
+    }
+    return result;
   }
 
-  async getIdea(id: number): Promise<IdeaResponse | undefined> {
+  async getIdea(id: number, currentUserId?: number): Promise<IdeaResponse | undefined> {
     const [idea] = await db.select().from(ideas).where(eq(ideas.id, id));
-    return idea;
+    if (!idea) return undefined;
+    const upvoteCount = await this.getUpvoteCount(id);
+    const hasUpvoted = currentUserId ? await this.hasUserUpvoted(id, currentUserId) : false;
+    return { ...idea, upvoteCount, hasUpvoted };
   }
 
   async createIdea(idea: CreateIdeaRequest & { userId?: number | null }): Promise<IdeaResponse> {
     const [newIdea] = await db.insert(ideas).values(idea).returning();
-    return newIdea;
+    return { ...newIdea, upvoteCount: 0, hasUpvoted: false };
   }
 
   async updateIdea(id: number, updates: UpdateIdeaRequest): Promise<IdeaResponse> {
@@ -47,7 +63,8 @@ export class DatabaseStorage implements IStorage {
       .set(updates)
       .where(eq(ideas.id, id))
       .returning();
-    return updatedIdea;
+    const upvoteCount = await this.getUpvoteCount(id);
+    return { ...updatedIdea, upvoteCount, hasUpvoted: false };
   }
 
   async deleteIdea(id: number): Promise<void> {
@@ -79,6 +96,32 @@ export class DatabaseStorage implements IStorage {
   async createComment(comment: CreateCommentRequest & { userId?: number | null }): Promise<CommentResponse> {
     const [newComment] = await db.insert(comments).values(comment).returning();
     return newComment;
+  }
+
+  async addUpvote(ideaId: number, userId: number): Promise<void> {
+    await db.insert(upvotes).values({ ideaId, userId });
+  }
+
+  async removeUpvote(ideaId: number, userId: number): Promise<void> {
+    await db.delete(upvotes).where(
+      and(eq(upvotes.ideaId, ideaId), eq(upvotes.userId, userId))
+    );
+  }
+
+  async getUpvoteCount(ideaId: number): Promise<number> {
+    const [result] = await db
+      .select({ count: count() })
+      .from(upvotes)
+      .where(eq(upvotes.ideaId, ideaId));
+    return result?.count ?? 0;
+  }
+
+  async hasUserUpvoted(ideaId: number, userId: number): Promise<boolean> {
+    const [result] = await db
+      .select()
+      .from(upvotes)
+      .where(and(eq(upvotes.ideaId, ideaId), eq(upvotes.userId, userId)));
+    return !!result;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {

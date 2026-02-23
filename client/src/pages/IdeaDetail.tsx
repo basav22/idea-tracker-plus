@@ -1,9 +1,10 @@
-import { useIdea, useDeleteIdea } from "@/hooks/use-ideas";
+import { useIdea, useDeleteIdea, useUpvoteIdea, useRemoveUpvote } from "@/hooks/use-ideas";
+import { useUser } from "@/hooks/use-auth";
 import { Link, useLocation, useRoute } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit2, Trash2, Calendar, CheckCircle2, Target, Users, Palette, Layers } from "lucide-react";
+import { ArrowLeft, Edit2, Trash2, Calendar, CheckCircle2, Target, Users, Palette, Layers, ThumbsUp } from "lucide-react";
 import { CreateIdeaDialog } from "@/components/CreateIdeaDialog";
 import { CommentSection } from "@/components/CommentSection";
 import { useState } from "react";
@@ -27,7 +28,10 @@ export default function IdeaDetail() {
   
   const { data: idea, isLoading, error } = useIdea(id);
   const deleteMutation = useDeleteIdea();
-  
+  const upvoteMutation = useUpvoteIdea();
+  const removeUpvoteMutation = useRemoveUpvote();
+  const { data: user } = useUser();
+
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -68,6 +72,24 @@ export default function IdeaDetail() {
             </Button>
           </Link>
           <div className="flex gap-2">
+            <Button
+              variant={idea.hasUpvoted ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                if (!user) return;
+                if (idea.hasUpvoted) {
+                  removeUpvoteMutation.mutate(idea.id);
+                } else {
+                  upvoteMutation.mutate(idea.id);
+                }
+              }}
+              disabled={!user}
+              title={!user ? 'Login to upvote' : idea.hasUpvoted ? 'Remove upvote' : 'Upvote this idea'}
+              className="gap-1.5"
+            >
+              <ThumbsUp className={`w-4 h-4 ${idea.hasUpvoted ? 'fill-current' : ''}`} />
+              {idea.upvoteCount}
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)}>
               <Edit2 className="w-4 h-4 mr-2" />
               Edit

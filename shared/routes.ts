@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { insertIdeaSchema, insertCommentSchema, type Idea, type Comment, type User } from "./schema";
+import { insertIdeaSchema, insertCommentSchema, type IdeaResponse, type Comment, type User } from "./schema";
 
 export const errorSchemas = {
   validation: z.object({
@@ -60,14 +60,14 @@ export const api = {
       method: 'GET' as const,
       path: '/api/ideas' as const,
       responses: {
-        200: z.array(z.custom<Idea>()),
+        200: z.array(z.custom<IdeaResponse>()),
       },
     },
     get: {
       method: 'GET' as const,
       path: '/api/ideas/:id' as const,
       responses: {
-        200: z.custom<Idea>(),
+        200: z.custom<IdeaResponse>(),
         404: errorSchemas.notFound,
       },
     },
@@ -76,7 +76,7 @@ export const api = {
       path: '/api/ideas' as const,
       input: insertIdeaSchema,
       responses: {
-        201: z.custom<Idea>(),
+        201: z.custom<IdeaResponse>(),
         400: errorSchemas.validation,
       },
     },
@@ -85,7 +85,7 @@ export const api = {
       path: '/api/ideas/:id' as const,
       input: insertIdeaSchema.partial(),
       responses: {
-        200: z.custom<Idea>(),
+        200: z.custom<IdeaResponse>(),
         400: errorSchemas.validation,
         404: errorSchemas.notFound,
       },
@@ -114,6 +114,23 @@ export const api = {
           201: z.custom<Comment>(),
           400: errorSchemas.validation,
         },
+      },
+    },
+    upvote: {
+      method: 'POST' as const,
+      path: '/api/ideas/:id/upvote' as const,
+      responses: {
+        200: z.object({ id: z.number(), upvoteCount: z.number() }),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
+    },
+    removeUpvote: {
+      method: 'DELETE' as const,
+      path: '/api/ideas/:id/upvote' as const,
+      responses: {
+        200: z.object({ id: z.number(), upvoteCount: z.number() }),
+        404: errorSchemas.notFound,
       },
     },
   },

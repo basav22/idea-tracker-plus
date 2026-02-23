@@ -5,7 +5,7 @@ import { CreateIdeaDialog } from "@/components/CreateIdeaDialog";
 import { Button } from "@/components/ui/button";
 import { Plus, Lightbulb, LayoutGrid, List, LogOut } from "lucide-react";
 import { useState } from "react";
-import { type Idea } from "@shared/schema";
+import { type Idea, type IdeaResponse } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser, useLogout } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
@@ -16,7 +16,7 @@ export default function Home() {
   const logout = useLogout();
   const [, navigate] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingIdea, setEditingIdea] = useState<Idea | null>(null);
+  const [editingIdea, setEditingIdea] = useState<IdeaResponse | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "table">("table");
 
   const handleLogout = async () => {
@@ -29,7 +29,7 @@ export default function Home() {
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (idea: Idea) => {
+  const handleEdit = (idea: IdeaResponse) => {
     setEditingIdea(idea);
     setIsDialogOpen(true);
   };

@@ -68,12 +68,14 @@ export async function registerRoutes(
 
   // ---- Ideas routes ----
   app.get(api.ideas.list.path, async (req, res) => {
-    const allIdeas = await storage.getIdeas();
+    const currentUserId = req.isAuthenticated() ? req.user!.id : undefined;
+    const allIdeas = await storage.getIdeas(currentUserId);
     res.json(allIdeas);
   });
 
   app.get(api.ideas.get.path, async (req, res) => {
-    const idea = await storage.getIdea(Number(req.params.id));
+    const currentUserId = req.isAuthenticated() ? req.user!.id : undefined;
+    const idea = await storage.getIdea(Number(req.params.id), currentUserId);
     if (!idea) {
       return res.status(404).json({ message: 'Idea not found' });
     }
@@ -143,6 +145,40 @@ export async function registerRoutes(
       }
       throw err;
     }
+  });
+
+  // ---- Upvote routes ----
+  app.post(api.ideas.upvote.path, requireAuth, async (req, res) => {
+    const ideaId = Number(req.params.id);
+    const userId = req.user!.id;
+
+    const idea = await storage.getIdea(ideaId);
+    if (!idea) {
+      return res.status(404).json({ message: 'Idea not found' });
+    }
+
+    const alreadyUpvoted = await storage.hasUserUpvoted(ideaId, userId);
+    if (alreadyUpvoted) {
+      return res.status(400).json({ message: 'Already upvoted' });
+    }
+
+    await storage.addUpvote(ideaId, userId);
+    const upvoteCount = await storage.getUpvoteCount(ideaId);
+    res.json({ id: ideaId, upvoteCount });
+  });
+
+  app.delete(api.ideas.removeUpvote.path, requireAuth, async (req, res) => {
+    const ideaId = Number(req.params.id);
+    const userId = req.user!.id;
+
+    const idea = await storage.getIdea(ideaId);
+    if (!idea) {
+      return res.status(404).json({ message: 'Idea not found' });
+    }
+
+    await storage.removeUpvote(ideaId, userId);
+    const upvoteCount = await storage.getUpvoteCount(ideaId);
+    res.json({ id: ideaId, upvoteCount });
   });
 
   // Seed data
