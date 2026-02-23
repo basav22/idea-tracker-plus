@@ -57,6 +57,6 @@ export type CreateCommentRequest = InsertComment;
 export type Upvote = typeof upvotes.$inferSelect;
 
 // Response types
-export type IdeaResponse = Idea & { upvoteCount: number; hasUpvoted: boolean };
+export type IdeaResponse = Idea & { upvoteCount: number; hasUpvoted: boolean; username?: string };
 export type IdeasListResponse = IdeaResponse[];
 export type CommentResponse = Comment;

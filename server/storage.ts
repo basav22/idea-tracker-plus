@@ -35,22 +35,49 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getIdeas(currentUserId?: number): Promise<IdeaResponse[]> {
-    const rows = await db.select().from(ideas);
+    const rows = await db
+      .select({
+        id: ideas.id,
+        what: ideas.what,
+        who: ideas.who,
+        features: ideas.features,
+        doneCriteria: ideas.doneCriteria,
+        inspiration: ideas.inspiration,
+        userId: ideas.userId,
+        createdAt: ideas.createdAt,
+        username: users.username,
+      })
+      .from(ideas)
+      .leftJoin(users, eq(ideas.userId, users.id));
     const result: IdeaResponse[] = [];
     for (const row of rows) {
       const upvoteCount = await this.getUpvoteCount(row.id);
       const hasUpvoted = currentUserId ? await this.hasUserUpvoted(row.id, currentUserId) : false;
-      result.push({ ...row, upvoteCount, hasUpvoted });
+      result.push({ ...row, upvoteCount, hasUpvoted, username: row.username ?? undefined });
     }
     return result;
   }
 
   async getIdea(id: number, currentUserId?: number): Promise<IdeaResponse | undefined> {
-    const [idea] = await db.select().from(ideas).where(eq(ideas.id, id));
-    if (!idea) return undefined;
+    const [row] = await db
+      .select({
+        id: ideas.id,
+        what: ideas.what,
+        who: ideas.who,
+        features: ideas.features,
+        doneCriteria: ideas.doneCriteria,
+        inspiration: ideas.inspiration,
+        userId: ideas.userId,
+        createdAt: ideas.createdAt,
+        username: users.username,
+      })
+      .from(ideas)
+      .leftJoin(users, eq(ideas.userId, users.id))
+      .where(eq(ideas.id, id));
+    if (!row) return undefined;
     const upvoteCount = await this.getUpvoteCount(id);
     const hasUpvoted = currentUserId ? await this.hasUserUpvoted(id, currentUserId) : false;
-    return { ...idea, upvoteCount, hasUpvoted };
+    return { ...row, upvoteCount, hasUpvoted, username: row.username ?? undefined };
   }
 
   async createIdea(idea: CreateIdeaRequest & { userId?: number | null }): Promise<IdeaResponse> {

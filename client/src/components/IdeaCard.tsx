@@ -62,6 +62,11 @@ export function IdeaCard({ idea, onEdit }: IdeaCardProps) {
                 Idea #{idea.id}
               </Badge>
             </div>
+            {idea.username && (
+              <div className="text-xs text-muted-foreground">
+                by <span className="font-medium text-foreground/70">{idea.username}</span>
+              </div>
+            )}
             <div className="text-sm text-muted-foreground font-medium flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-primary/40" />
               For: {idea.who}
@@ -100,7 +105,7 @@ export function IdeaCard({ idea, onEdit }: IdeaCardProps) {
               </Button>
             </div>
 
-            {user && (
+            {user && user.id === idea.userId && (
               <div className="flex gap-1">
                 <Button
                   variant="ghost"

@@ -69,6 +69,9 @@ export function IdeaTable({ ideas, onEdit }: IdeaTableProps) {
               <TableCell>
                 <div className="max-w-[400px]">
                   <p className="font-medium text-foreground line-clamp-1">{idea.what}</p>
+                  {idea.username && (
+                    <p className="text-xs text-muted-foreground">by {idea.username}</p>
+                  )}
                 </div>
               </TableCell>
               <TableCell>
@@ -107,7 +110,7 @@ export function IdeaTable({ ideas, onEdit }: IdeaTableProps) {
                       <ExternalLink className="w-3.5 h-3.5" />
                     </Link>
                   </Button>
-                  {user && (
+                  {user && user.id === idea.userId && (
                     <>
                       <Button
                         variant="ghost"

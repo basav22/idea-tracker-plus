@@ -90,7 +90,7 @@ export default function IdeaDetail() {
               <ThumbsUp className={`w-4 h-4 ${idea.hasUpvoted ? 'fill-current' : ''}`} />
               {idea.upvoteCount}
             </Button>
-            {user && (
+            {user && user.id === idea.userId && (
               <>
                 <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)}>
                   <Edit2 className="w-4 h-4 mr-2" />
@@ -122,9 +122,14 @@ export default function IdeaDetail() {
               </span>
             )}
           </div>
-          <h1 className="font-display text-4xl md:text-5xl font-bold leading-tight mb-6">
+          <h1 className="font-display text-4xl md:text-5xl font-bold leading-tight mb-2">
             {idea.what}
           </h1>
+          {idea.username && (
+            <p className="text-sm text-muted-foreground mb-6">
+              by <span className="font-medium text-foreground/70">{idea.username}</span>
+            </p>
+          )}
           <div className="mt-6 p-6 rounded-2xl bg-secondary/10 border border-border/30">
             <h3 className="font-display text-lg font-semibold mb-2">Overall Discussion</h3>
             <CommentSection ideaId={idea.id} section="what" />
