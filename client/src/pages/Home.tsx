@@ -8,7 +8,7 @@ import { useState } from "react";
 import { type Idea, type IdeaResponse } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser, useLogout } from "@/hooks/use-auth";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 
 export default function Home() {
   const { data: ideas, isLoading, error } = useIdeas();
@@ -125,14 +125,20 @@ export default function Home() {
                 <List className="h-4 w-4" />
               </Button>
             </div>
-            <Button 
-              size="lg" 
-              onClick={handleCreate}
-              className="group shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300"
-            >
-              <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
-              Capture New Idea
-            </Button>
+            {user ? (
+              <Button
+                size="lg"
+                onClick={handleCreate}
+                className="group shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300"
+              >
+                <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+                Capture New Idea
+              </Button>
+            ) : (
+              <Button size="lg" variant="outline" asChild>
+                <Link href="/auth">Login to contribute</Link>
+              </Button>
+            )}
           </motion.div>
         </header>
 
@@ -150,9 +156,15 @@ export default function Home() {
               <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
                 Every great project starts with a single thought. Capture your first idea now.
               </p>
-              <Button onClick={handleCreate} variant="outline" className="bg-background">
-                Create First Idea
-              </Button>
+              {user ? (
+                <Button onClick={handleCreate} variant="outline" className="bg-background">
+                  Create First Idea
+                </Button>
+              ) : (
+                <Button variant="outline" className="bg-background" asChild>
+                  <Link href="/auth">Login to contribute</Link>
+                </Button>
+              )}
             </motion.div>
           ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">

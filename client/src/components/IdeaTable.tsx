@@ -107,27 +107,31 @@ export function IdeaTable({ ideas, onEdit }: IdeaTableProps) {
                       <ExternalLink className="w-3.5 h-3.5" />
                     </Link>
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-white"
-                    onClick={() => onEdit(idea)}
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                    <span className="sr-only">Edit</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => {
-                      setIdeaToDelete(idea.id);
-                      setShowDeleteDialog(true);
-                    }}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span className="sr-only">Delete</span>
-                  </Button>
+                  {user && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-white"
+                        onClick={() => onEdit(idea)}
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          setIdeaToDelete(idea.id);
+                          setShowDeleteDialog(true);
+                        }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

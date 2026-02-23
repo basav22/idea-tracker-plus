@@ -6,8 +6,10 @@ import { type Comment, type InsertComment } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, Send, Loader2 } from "lucide-react";
+import { MessageSquare, Send, Loader2, LogIn } from "lucide-react";
 import { format } from "date-fns";
+import { useUser } from "@/hooks/use-auth";
+import { Link } from "wouter";
 
 interface CommentSectionProps {
   ideaId: number;
@@ -17,6 +19,7 @@ interface CommentSectionProps {
 export function CommentSection({ ideaId, section }: CommentSectionProps) {
   const [content, setContent] = useState("");
   const { toast } = useToast();
+  const { data: user } = useUser();
 
   const { data: comments, isLoading } = useQuery<Comment[]>({
     queryKey: [buildUrl(api.ideas.comments.list.path, { id: ideaId, section })],
@@ -84,26 +87,35 @@ export function CommentSection({ ideaId, section }: CommentSectionProps) {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="relative">
-        <Textarea
-          placeholder="Add a comment..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="min-h-[80px] pr-12 bg-background/50 border-border/50 focus-visible:ring-primary/20 transition-all resize-none"
-        />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={mutation.isPending || !content.trim()}
-          className="absolute bottom-2 right-2 h-8 w-8 shadow-sm"
-        >
-          {mutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
-          )}
-        </Button>
-      </form>
+      {user ? (
+        <form onSubmit={handleSubmit} className="relative">
+          <Textarea
+            placeholder="Add a comment..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="min-h-[80px] pr-12 bg-background/50 border-border/50 focus-visible:ring-primary/20 transition-all resize-none"
+          />
+          <Button
+            type="submit"
+            size="icon"
+            disabled={mutation.isPending || !content.trim()}
+            className="absolute bottom-2 right-2 h-8 w-8 shadow-sm"
+          >
+            {mutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </form>
+      ) : (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+          <LogIn className="w-4 h-4" />
+          <Link href="/auth" className="hover:text-primary underline underline-offset-4 transition-colors">
+            Log in to join the discussion
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

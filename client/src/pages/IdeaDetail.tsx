@@ -90,14 +90,18 @@ export default function IdeaDetail() {
               <ThumbsUp className={`w-4 h-4 ${idea.hasUpvoted ? 'fill-current' : ''}`} />
               {idea.upvoteCount}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)}>
-              <Edit2 className="w-4 h-4 mr-2" />
-              Edit
-            </Button>
-            <Button variant="destructive" size="sm" onClick={() => setIsDeleteDialogOpen(true)}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
-            </Button>
+            {user && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)}>
+                  <Edit2 className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => setIsDeleteDialogOpen(true)}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </Button>
+              </>
+            )}
           </div>
         </div>
 

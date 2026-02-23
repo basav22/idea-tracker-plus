@@ -100,26 +100,28 @@ export function IdeaCard({ idea, onEdit }: IdeaCardProps) {
               </Button>
             </div>
 
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-white"
-                onClick={() => onEdit(idea)}
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-                <span className="sr-only">Edit</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                onClick={() => setShowDeleteDialog(true)}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span className="sr-only">Delete</span>
-              </Button>
-            </div>
+            {user && (
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-white"
+                  onClick={() => onEdit(idea)}
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span className="sr-only">Edit</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="sr-only">Delete</span>
+                </Button>
+              </div>
+            )}
           </CardFooter>
         </Card>
       </div>

@@ -50,8 +50,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthRoute} />
-      <Route path="/">{() => <ProtectedRoute component={Home} />}</Route>
-      <Route path="/ideas/:id">{() => <ProtectedRoute component={IdeaDetail} />}</Route>
+      <Route path="/" component={Home} />
+      <Route path="/ideas/:id" component={IdeaDetail} />
       <Route component={NotFound} />
     </Switch>
   );
